@@ -156,6 +156,12 @@ end $$;
 create trigger tasks_guard before update on public.tasks for each row execute function public.tasks_guard();
 
 -- ---------- Rettigheder ----------
+-- Skrives eksplicit, så det virker, uanset om Supabase giver adgang automatisk
+-- ("Grant API access to new tables automatically") eller ej.
+grant usage on schema public to service_role, authenticated;
+grant all on all tables in schema public to service_role;      -- serverfunktionerne
+grant all on all sequences in schema public to service_role;
+grant execute on all functions in schema public to service_role;
 revoke all on all tables in schema public from anon;
 grant select, insert, update, delete on
   public.families, public.members, public.tasks, public.log, public.days, public.push_subscriptions
