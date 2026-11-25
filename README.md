@@ -5,6 +5,7 @@ En dansk familie-app, der deler rengøringen op i små daglige opgaver, så week
 - **Voksne** får en fælles plan på ca. 20 minutter om dagen. Opgaverne vælges ud fra, hvad der er mest "for sent".
 - **Børn** ser kun deres egne opgaver. Mor eller far godkender dem, og pointene bliver til lommepenge.
 - **Påmindelser** sendes hver morgen og aftenen før, skraldet bliver hentet.
+- **Connys stemme**: Conny taler dansk med telefonens egen stemme. Hun hilser, når man trykker på hende, roser, når en opgave er klaret, og fortæller børnene, når deres point er godkendt (`public/stemme.js`).
 - **Conny**, en sød svamp, hepper og får kasket, solbriller og krone, når familien samler point.
 
 ## Teknik

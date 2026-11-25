@@ -40,6 +40,19 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 .conny { width: 92px; height: 92px; flex: none; }
 .conny.bounce { animation: bounce .7s ease; }
 @keyframes bounce { 0%,100% { transform: translateY(0) } 30% { transform: translateY(-16px) rotate(-6deg) } 60% { transform: translateY(0) rotate(4deg) } 80% { transform: translateY(-5px) } }
+/* Conny blinker og taler */
+.conny .eyes { transform-box: fill-box; transform-origin: center; animation: blink 4.5s infinite; }
+@keyframes blink { 0%, 94%, 100% { transform: scaleY(1) } 97% { transform: scaleY(.1) } }
+.conny .mouth-open { opacity: 0; transform-box: fill-box; transform-origin: center top; }
+.conny.talking .mouth { opacity: 0; }
+.conny.talking .mouth-open { animation: talk .26s ease-in-out infinite alternate; }
+@keyframes talk { from { opacity: 1; transform: scaleY(.35) } to { opacity: 1; transform: scaleY(1.1) } }
+.conny.talking { animation: wiggle 1.2s ease-in-out infinite; }
+@keyframes wiggle { 0%,100% { transform: rotate(0) } 25% { transform: rotate(-3deg) translateY(-2px) } 75% { transform: rotate(3deg) } }
+.conny.can-talk { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.conny.can-talk:active { transform: scale(.94); }
+.speak-hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+@media (prefers-reduced-motion: reduce) { .conny .eyes, .conny.talking { animation: none; } }
 .bubble { position: relative; background: var(--card); border-radius: 18px; padding: 12px 14px;
   box-shadow: var(--shadow); font-size: 15px; flex: 1; margin-bottom: 18px; }
 .bubble::after { content: ""; position: absolute; left: -8px; bottom: 14px; width: 16px; height: 16px;

@@ -1,5 +1,6 @@
 import { createBackend, isDemo, slug } from './backend.js';
 import { DEFAULT_MEMBERS, buildSeed, CHEERS } from './data.js';
+import * as V from './stemme.js';
 
 // ---------- datoer ----------
 const pad = (n) => String(n).padStart(2, '0');
@@ -136,6 +137,7 @@ async function complete(t) {
   const list = todayList(me());
   const willBeAll = list.length && list.every((x) => x === t.id || doneToday(x));
   celebrate(willBeAll ? 80 : 30);
+  if (talkOn()) V.say(V.praiseLine(member(me())?.name || '', t.name, willBeAll));
   if (S.timer.id === t.id) stopTimer();
   toast(willBeAll ? '🎉 Alt er klaret i dag! Du er fantastisk.'
     : (isParent() ? '' : `+${t.min} point (venter på godkendelse) · `) + CHEERS[Math.floor(Math.random() * CHEERS.length)]);
@@ -234,7 +236,7 @@ function toast(msg) {
   clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2800);
 }
 
-function connySvg(pts, happy) {
+function connySvg(pts, happy, talk = false) {
   const lv = LEVELS.filter(([p]) => pts >= p).length;
   const cap = '<path d="M22 33 Q49 4 76 33 Z" fill="#a593e0"/><rect x="62" y="28" width="26" height="6" rx="3" fill="#8b78d0"/><circle cx="49" cy="13" r="3" fill="#ffc94d"/>';
   const crown = '<path d="M28 32 L31 10 L40 21 L49 5 L58 21 L67 10 L70 32 Z" fill="#ffc94d" stroke="#e0a800" stroke-width="1.5" stroke-linejoin="round"/><circle cx="49" cy="24" r="2.5" fill="#ff9f80"/>';
@@ -242,7 +244,8 @@ function connySvg(pts, happy) {
   const eyes = happy
     ? '<path d="M33 61 Q38 54 43 61" stroke="#2d2a32" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M55 61 Q60 54 65 61" stroke="#2d2a32" stroke-width="3" fill="none" stroke-linecap="round"/>'
     : '<ellipse cx="38" cy="60" rx="4.5" ry="5.5" fill="#2d2a32"/><ellipse cx="60" cy="60" rx="4.5" ry="5.5" fill="#2d2a32"/><circle cx="39.5" cy="58" r="1.6" fill="#fff"/><circle cx="61.5" cy="58" r="1.6" fill="#fff"/>';
-  return `<svg class="conny" viewBox="0 0 100 100" aria-label="Conny svampen">
+  const attrs = talk ? 'data-act="connyTalk" role="button" tabindex="0" aria-label="Tryk for at høre Conny"' : 'aria-label="Conny svampen"';
+  return `<svg class="conny${talk ? ' can-talk' : ''}${talk && V.isSpeaking() ? ' talking' : ''}" viewBox="0 0 100 100" ${attrs}>
     <circle cx="88" cy="16" r="6" fill="none" stroke="#8fd3f4" stroke-width="2"/>
     <circle cx="94" cy="32" r="3.5" fill="none" stroke="#8fd3f4" stroke-width="2"/>
     <circle cx="9" cy="24" r="4.5" fill="none" stroke="#8fd3f4" stroke-width="2"/>
@@ -250,9 +253,10 @@ function connySvg(pts, happy) {
     <path d="M16 46 V40 a10 10 0 0 1 10 -10 H72 a10 10 0 0 1 10 10 V46 Z" fill="#3fbf9b"/>
     <circle cx="27" cy="77" r="3" fill="#f2b93b"/><circle cx="72" cy="79" r="2.5" fill="#f2b93b"/><circle cx="66" cy="50" r="2" fill="#2fa585"/>
     ${lv >= 3 ? crown : lv >= 1 ? cap : ''}
-    ${eyes}${lv >= 2 && !happy ? glasses : ''}
+    <g class="eyes">${eyes}</g>${lv >= 2 && !happy ? glasses : ''}
     <circle cx="30" cy="70" r="4" fill="#ff9f80" opacity=".6"/><circle cx="68" cy="70" r="4" fill="#ff9f80" opacity=".6"/>
-    <path d="${happy ? 'M40 70 Q49 82 58 70 Z' : 'M41 71 Q49 79 57 71'}" stroke="#2d2a32" stroke-width="3" fill="${happy ? '#ff7a6b' : 'none'}" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="mouth" d="${happy ? 'M40 70 Q49 82 58 70 Z' : 'M41 71 Q49 79 57 71'}" stroke="#2d2a32" stroke-width="3" fill="${happy ? '#ff7a6b' : 'none'}" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse class="mouth-open" cx="49" cy="74" rx="7" ry="5.5" fill="#ff7a6b" stroke="#2d2a32" stroke-width="2.5"/>
   </svg>`;
 }
 
@@ -275,8 +279,10 @@ function headerView() {
   const demo = isDemo ? `<div class="demo"><span>Demo · se appen som</span>${members().map((m) =>
     `<button data-act="demoAs" data-m="${m.id}" class="${m.id === me() ? 'on' : ''}">${esc(m.name)}</button>`).join('')}</div>` : '';
   const date = new Date().toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long' });
-  return `${demo}<div class="hero">${connySvg(famMonthPts(), happy)}
-    <div class="bubble"><div class="date">${date}</div><div>${esc(connySays(list))}</div></div></div>`;
+  const talk = talkOn();
+  return `${demo}<div class="hero">${connySvg(famMonthPts(), happy, talk)}
+    <div class="bubble"><div class="date">${date}</div><div>${esc(connySays(list))}</div>
+    ${talk ? '<div class="speak-hint">🔊 Tryk på Conny for at høre hende</div>' : ''}</div></div>`;
 }
 
 function card(id, { swap = false } = {}) {
@@ -382,7 +388,7 @@ function pointsView() {
     </div>
     ${pendingPts(m) ? `<div class="card small">⏳ ${pendingPts(m)} point venter på, at mor eller far godkender dem.</div>` : ''}
     <div class="card small">Du får ${settings().krPer100 ?? 20} kr for hver 100 point. 1 minuts opgave = 1 point.</div>
-    ${goalCard()}${levelCard()}${pushCard()}
+    ${goalCard()}${levelCard()}${voiceCard()}${pushCard()}
     <button class="danger" data-act="logout">Log ud</button>`;
 }
 
@@ -412,6 +418,42 @@ function chips(key, options, cur) {
 }
 const hourSelect = (key, cur) => `<select data-set="${key}" data-num="1">${Array.from({ length: 24 }, (_, h) =>
   `<option value="${h}" ${h === cur ? 'selected' : ''}>kl. ${pad(h)}:00</option>`).join('')}</select>`;
+
+// ---------- Connys stemme ----------
+const talkOn = () => V.canSpeak && !!S.user && V.voiceOn(!isParent());
+let taps = 0, tapT;
+function heardKey() { return `conny-hørt-${fid()}-${me()}-${monthKey()}`; }
+function connyTalk() {
+  const name = member(me())?.name || '';
+  clearTimeout(tapT); tapT = setTimeout(() => { taps = 0; }, 20000);
+  taps++;
+  // Nyt om godkendte point går altid forrest.
+  let news = '';
+  if (!isParent()) {
+    const pts = monthPts(me());
+    let heard = 0;
+    try { heard = Number(localStorage.getItem(heardKey()) || 0); } catch {}
+    if (pts > heard) {
+      const k = kr(me());
+      news = `Godt nyt, ${name}! Du har fået ${pts - heard} nye point godkendt. Nu har du ${k} ${k === 1 ? 'krone' : 'kroner'} i lommepenge denne måned.`;
+      taps = 0; // næste tryk giver dagens hilsen
+      try { localStorage.setItem(heardKey(), String(pts)); } catch {}
+    }
+  }
+  const text = news || (taps > 1 ? V.funLine(name) : connySays(todayList(me())));
+  if (!V.say(text)) toast('Telefonen kan ikke læse højt');
+}
+function voiceCard() {
+  if (!V.canSpeak) return '';
+  const on = V.voiceOn(!isParent());
+  return `<div class="card"><b>🗣️ Connys stemme på denne telefon</b>
+    <div class="muted small">Conny siger hej, når du trykker på hende, og roser dig, når du klarer en opgave.${
+      V.hasDanishVoice() ? '' : ' Telefonen har ingen dansk stemme endnu. Hent “Dansk” under Indstillinger → Tilgængelighed → Oplæst indhold → Stemmer.'}</div>
+    <div class="row-between" style="margin-top:8px">
+      <button class="${on ? '' : 'primary'}" data-act="voice" data-val="${on ? 0 : 1}">${on ? 'Slå stemmen fra' : 'Slå stemmen til'}</button>
+      ${on ? '<button data-act="voiceTest">▶︎ Prøv</button>' : ''}
+    </div></div>`;
+}
 
 function pushCard() {
   const ios = /iPhone|iPad/.test(navigator.userAgent);
@@ -449,7 +491,7 @@ function settingsView() {
 
     <h2>Morgenpåmindelse</h2>
     <div class="card">${hourSelect('morningHour', s.morningHour ?? 7)}</div>
-    ${pushCard()}
+    ${voiceCard()}${pushCard()}
 
     <h2>Lommepenge og belønning</h2>
     <div class="card">
@@ -643,6 +685,9 @@ document.addEventListener('click', async (e) => {
       case 'swap': await swap(id); break;
       case 'bonus': await bonus(); break;
       case 'timer': startTimer(id); break;
+      case 'connyTalk': connyTalk(); break;
+      case 'voice': V.setVoiceOn(b.dataset.val === '1'); if (b.dataset.val !== '1') V.stop(); render(); break;
+      case 'voiceTest': V.say(`Hej ${member(me())?.name || ''}! Jeg er Conny, og jeg hjælper dig med at holde huset skinnende.`); break;
       case 'approve': await approve(id); break;
       case 'reject': await reject(id); break;
       case 'approveAll': for (const x of S.log.filter((x) => !x.approved)) await approve(x.id); toast('Alle godkendt ✓'); break;
@@ -672,7 +717,7 @@ document.addEventListener('click', async (e) => {
             : 'Påmindelser virker kun, når appen er føjet til hjemmeskærmen.');
         }
         break;
-      case 'logout': stopTimer(); await B.logout(); S.tab = 'today'; break;
+      case 'logout': stopTimer(); V.stop(); await B.logout(); S.tab = 'today'; break;
       case 'demoAs': B.switchTo(b.dataset.m, member(b.dataset.m).role); break;
       case 'authMode': S.authMode = b.dataset.mode; S.authError = ''; render(); break;
       case 'addMember': S.form[`m${S.setupCount}-role`] = 'kid'; S.setupCount++; render(); break;
