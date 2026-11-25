@@ -2,7 +2,7 @@
 
 Conny bruger to gratis tjenester. Ingen af dem kræver betalingskort.
 - **Supabase** står for login, den delte database og påmindelserne.
-- **GitHub** gemmer koden og lægger appen online med GitHub Pages.
+- **GitHub** gemmer koden, og **Vercel** lægger appen online, hver gang koden ændres.
 
 Du gør selv de trin, der kræver dine konti. Claude klarer resten.
 
@@ -60,15 +60,15 @@ Claude giver dig kommandoen `npx supabase login`. Den åbner Supabase i din brow
 
 ### 8. Opret et repository
 1. Gå til **github.com** og tryk **New repository**.
-2. Navn: `conny`. Vælg **Public**, for GitHub Pages er kun gratis for offentlige repositories. Tilføj **ikke** en README.
+2. Navn: `conny`. Vælg **Public** eller **Private**. Vercel virker med begge. Tilføj **ikke** en README.
 3. **Send adressen til Claude**, fx `https://github.com/ditbrugernavn/conny`.
 
 Koden er offentlig, men familiens data er det ikke. Navne, opgaver og point ligger kun i Supabase og er beskyttet af adgangsreglerne.
 
-### 9. Slå GitHub Pages til
-1. Claude lægger koden op. Første gang kan det være nødvendigt, at du selv kører én kommando, som Claude giver dig.
-2. I repository'et går du til **Settings → Pages**. Under **Source** vælger du **GitHub Actions**.
-3. Efter et minut ligger appen på `https://ditbrugernavn.github.io/conny/`. Det er den adresse, der skal bruges som `APP_URL` i trin 5.
+### 9. Læg appen på Vercel
+1. Gå til **vercel.com/new** og vælg at importere `conny` fra GitHub. Første gang skal du forbinde GitHub til Vercel og installere Vercels GitHub-app. Giv kun adgang til `conny`.
+2. Under **Build and Output Settings** slår du **Output Directory** til og skriver `public`. Byggekommandoen skal være tom.
+3. Tryk **Deploy**. Appen ligger nu på den adresse, Vercel viser under **Domains**. Hos os er det `https://conny-gold.vercel.app/`. Det er den adresse, der skal bruges som `APP_URL` i trin 5.
 
 Hver gang koden ændres og lægges på GitHub, opdateres appen automatisk.
 
