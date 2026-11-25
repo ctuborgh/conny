@@ -68,7 +68,7 @@ Koden er offentlig, men familiens data er det ikke. Navne, opgaver og point ligg
 ### 9. Læg appen på Vercel
 1. Gå til **vercel.com/new** og vælg at importere `conny` fra GitHub. Første gang skal du forbinde GitHub til Vercel og installere Vercels GitHub-app. Giv kun adgang til `conny`.
 2. Under **Build and Output Settings** slår du **Output Directory** til og skriver `public`. Byggekommandoen skal være tom.
-3. Tryk **Deploy**. Appen ligger nu på den adresse, Vercel viser under **Domains**. Hos os er det `https://conny-gold.vercel.app/`. Det er den adresse, der skal bruges som `APP_URL` i trin 5.
+3. Tryk **Deploy**. Appen ligger nu på den adresse, Vercel viser under **Domains**. Hos os er det `https://conny-the-cleaner.vercel.app/`. Det er den adresse, der skal bruges som `APP_URL` i trin 5.
 
 Hver gang koden ændres og lægges på GitHub, opdateres appen automatisk.
 

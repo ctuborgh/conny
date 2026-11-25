@@ -2,7 +2,7 @@
 self.addEventListener('push', (event) => {
   let d = {};
   try { d = event.data ? event.data.json() : {}; } catch {}
-  event.waitUntil(self.registration.showNotification(d.title || 'Conny', {
+  event.waitUntil(self.registration.showNotification(d.title || 'Conny the Cleaner', {
     body: d.body || '',
     icon: 'icons/icon-192.png',
     badge: 'icons/icon-192.png',

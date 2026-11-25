@@ -23,6 +23,6 @@ En dansk familie-app, der deler rengøringen op i små daglige opgaver, så week
 - `supabase/`: databasens tabeller og regler, serverfunktioner og tidsplan
 - `OPSAETNING.md`: trin for trin-opsætning
 
-Live: https://conny-gold.vercel.app/
+Live: https://conny-the-cleaner.vercel.app/
 
 Uden `public/config.js` udfyldt kører appen i **demo-tilstand**, hvor alt kun gemmes i browseren.
