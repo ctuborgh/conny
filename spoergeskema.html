@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conny – spørgeskema</title>
+<style>
+  :root { --bg:#fdf8f3; --card:#fff; --ink:#2d2a32; --muted:#7b7584; --line:#ece5dc; --mint:#3fbf9b; --mint-soft:#dff6ee; --peach:#ff9f80; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#1c1a22; --card:#27242f; --ink:#f3eff8; --muted:#a59fb0; --line:#383341; --mint-soft:#1f3b34; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family: ui-rounded, system-ui, -apple-system, "Segoe UI", sans-serif; line-height:1.45; }
+  .wrap { max-width: 680px; margin: 0 auto; padding: 16px 16px 120px; }
+  h1 { font-size: 26px; margin: 18px 0 4px; }
+  .intro { color: var(--muted); margin: 0 0 18px; }
+  .section { background: var(--card); border-radius: 20px; padding: 18px; margin-bottom: 16px; box-shadow: 0 6px 20px rgba(60,40,20,.07); }
+  .section h2 { font-size: 18px; margin: 0 0 6px; }
+  .q { margin-top: 16px; }
+  .q label { display:block; font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+  .q label .n { display:inline-block; min-width: 26px; color: var(--mint); }
+  .q label .hint { display:block; font-weight: 400; color: var(--muted); font-size: 13px; margin-top: 2px; }
+  textarea { width:100%; min-height: 46px; resize: vertical; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line);
+    background: var(--bg); color: var(--ink); font: inherit; font-size: 16px; overflow: hidden; }
+  textarea:focus { outline: 2px solid var(--mint); border-color: transparent; }
+  .bar { position: fixed; left:0; right:0; bottom:0; background: var(--card); border-top:1px solid var(--line); padding: 10px 16px; }
+  .bar .inner { max-width: 680px; margin: 0 auto; display:flex; gap: 10px; align-items:center; }
+  .prog { flex:1; font-size: 13px; color: var(--muted); }
+  .prog .track { height: 8px; background: var(--line); border-radius: 99px; margin-top: 4px; overflow:hidden; }
+  .prog .fill { height:100%; background: var(--mint); width:0; transition: width .3s; }
+  button { font: inherit; border:0; border-radius: 12px; padding: 10px 14px; cursor:pointer; font-weight: 600; }
+  .primary { background: var(--mint); color:#fff; }
+  .secondary { background: var(--mint-soft); color: var(--ink); }
+  .toast { position:fixed; left:50%; bottom: 80px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 99px; font-size: 14px; opacity:0; transition: opacity .3s; pointer-events:none; }
+  .toast.show { opacity: 1; }
+  .saved { font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🧽 Lad os lære jeres hjem at kende</h1>
+  <p class="intro">Skriv så kort eller langt, I vil. Stikord er fint, og spring over det, der ikke passer på jer. Svarene gemmes automatisk i browseren, så I kan lukke siden og fortsætte senere. Når I er færdige, trykker I <b>Kopiér svar</b> og sætter dem ind i chatten til Claude.</p>
+  <div id="form"></div>
+</div>
+
+<div class="bar"><div class="inner">
+  <div class="prog"><span id="progText">0 af 0 besvaret</span> <span class="saved" id="saved"></span><div class="track"><div class="fill" id="fill"></div></div></div>
+  <button class="secondary" id="dlBtn">Gem fil</button>
+  <button class="primary" id="copyBtn">Kopiér svar</button>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SECTIONS = [
+  ['A. Familien og hverdagen', [
+    ['Hvem bor i huset?', 'Antal voksne og børn, og børnenes alder'],
+    ['Hvem skal bruge appen?', 'Egne opgaver til hver, eller én fælles liste?'],
+    ['Skal børnene have opgaver, der passer til deres alder?', 'Hvilke kunne de klare?'],
+    ['Har I kæledyr?', 'Hvilke? Fælder de, slæber de skidt ind, kattebakke eller bur?'],
+    ['Hvor meget tid kan I realistisk bruge om dagen?', '5, 10, 15 eller 20 minutter'],
+    ['Er der dage, hvor I slet ikke har tid?', 'Fx sportsdage eller lange arbejdsdage'],
+    ['Skal weekenden være helt uden opgaver, eller må der være lidt?', ''],
+    ['Har I rengøringshjælp til noget af det i dag?', ''],
+  ]],
+  ['B. Huset generelt', [
+    ['Hvilken type bolig er det, og hvor mange m² cirka?', 'Villa, rækkehus, lejlighed …'],
+    ['Hvor mange etager er der? Er der trapper, der skal støvsuges?', ''],
+    ['Hvilke gulvtyper har I, og i hvilke rum?', 'Trægulv, laminat, fliser, vinyl, tæpper'],
+    ['Har I store tæpper på gulvet?', ''],
+    ['Har I robotstøvsuger eller robotmoppe?', 'Hvor kører den, og hvor ofte?'],
+    ['Hvilke maskiner har I?', 'Opvaskemaskine, vaskemaskine, tørretumbler, varmepumpe eller ventilation med filtre'],
+  ]],
+  ['C. Rummene', [
+    ['List alle rummene i huset', 'Køkken, alrum, stue, soveværelser, børneværelser, kontor, badeværelser, gæstetoilet, bryggers, entré, gang, kælder, loft, garage, udestue …'],
+    ['Køkken', 'Åbent til stuen? Spisebord, køkkenø, emhætte, ovn, mikroovn, kaffemaskine, elkedel, køleskab, fryser? Hvad bliver hurtigst beskidt?'],
+    ['Badeværelser', 'Hvor mange? Bruser med glasvæg eller forhæng, badekar, toiletter, håndvaske? Kalker vandet meget?'],
+    ['Soveværelser og børneværelser', 'Hvor mange, og hvem sover hvor? Rydder børnene selv op?'],
+    ['Stue og alrum', 'Hvad samler støv? Reoler, sofa i stof eller læder, sofaborde, tv-møbel, legetøj'],
+    ['Entré og bryggers', 'Hvor kommer sko, jakker, tasker og sportstøj hen? Er det et rodet sted?'],
+    ['Kontor', 'Skrivebord, papirer eller elektronik, der skal tørres af?'],
+  ]],
+  ['D. Ting, der skal huskes', [
+    ['Hvor mange vinduer har I cirka?', 'Pudser I selv, eller kommer der en vinduespudser?'],
+    ['Har I stueplanter?', 'Hvor mange, og hvor står de?'],
+    ['Har I brændeovn eller pejs?', ''],
+    ['Har I persienner, gardiner eller lameller?', 'Skal de støves af eller vaskes?'],
+    ['Har I andet, der skal passes?', 'Fx akvarium, fuglebur eller drivhus'],
+  ]],
+  ['E. Tøjvask, sengetøj og affald', [
+    ['Hvor mange vaske tager I om ugen cirka?', 'Hvem vasker, og hvem lægger sammen?'],
+    ['Hvor ofte skifter I sengetøj nu, og hvor ofte vil I gerne?', ''],
+    ['Hvor ofte skiftes håndklæder og viskestykker?', ''],
+    ['Hvor mange affaldsspande og sorteringer har I?', 'Hvilken dag bliver skraldet hentet?'],
+  ]],
+  ['F. Hvor ofte, og hvad irriterer jer', [
+    ['Hvad bliver hurtigst rodet eller beskidt?', ''],
+    ['Hvad irriterer jer allermest, når det ikke er gjort?', ''],
+    ['Hvad bliver aldrig gjort?', 'De skjulte opgaver: afkalke, rense ovn, tørre lister af …'],
+    ['Hvad skal gøres hver dag, uanset hvad?', 'Fx tømme opvaskeren eller rydde køkkenbordet'],
+    ['Er der noget, I allerede gør fast, og som appen ikke skal blande sig i?', ''],
+  ]],
+  ['G. Sæson og større opgaver', [
+    ['Skal appen huske de større ting en gang imellem?', 'Ovn, emhættefilter, afrime fryser, køleskab, afkalke kaffemaskine og elkedel, vaske dyner og puder, rense opvaske- og vaskemaskine, paneler og døre'],
+    ['Skal have, terrasse, altan, garage, bil eller cykler med?', 'Eller kun indendørs?'],
+  ]],
+  ['H. Hvad gør det sjovt for jer', [
+    ['Hvad motiverer familien?', 'Point, niveauer, streaks, konkurrence, belønninger (fx "100 point = fredagsslik") eller en glad Conny, der hepper'],
+    ['Skal Conny være en svamp, eller har I en anden idé til en maskot?', ''],
+    ['Hvilke telefoner har I?', 'iPhone, Android eller begge'],
+    ['Skal alle kunne se de samme opgaver på hver sin telefon?', 'Og se, når nogen har klaret noget?'],
+    ['Vil I have påmindelser, og i så fald hvornår på dagen?', ''],
+  ]],
+  ['Til sidst', [
+    ['Er der andet, Claude skal vide?', ''],
+  ]],
+];
+
+const KEY = 'conny-spoergeskema-v1';
+let answers = {};
+try { answers = JSON.parse(localStorage.getItem(KEY)) || {}; } catch {}
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+
+let n = 0;
+document.getElementById('form').innerHTML = SECTIONS.map(([title, qs]) =>
+  `<div class="section"><h2>${title}</h2>${qs.map(([q, hint]) => { n++; return `
+    <div class="q"><label for="q${n}"><span class="n">${n}.</span>${esc(q)}${hint ? `<span class="hint">${esc(hint)}</span>` : ''}</label>
+    <textarea id="q${n}" data-n="${n}" rows="1"></textarea></div>`; }).join('')}</div>`).join('');
+const TOTAL = n;
+
+function grow(t) { t.style.height = 'auto'; t.style.height = t.scrollHeight + 2 + 'px'; }
+function progress() {
+  const done = Object.values(answers).filter((v) => v.trim()).length;
+  document.getElementById('progText').textContent = `${done} af ${TOTAL} besvaret`;
+  document.getElementById('fill').style.width = done / TOTAL * 100 + '%';
+}
+let savedT;
+document.querySelectorAll('textarea').forEach((t) => {
+  t.value = answers[t.dataset.n] || '';
+  grow(t);
+  t.addEventListener('input', () => {
+    answers[t.dataset.n] = t.value; grow(t); progress();
+    try { localStorage.setItem(KEY, JSON.stringify(answers)); } catch {}
+    const s = document.getElementById('saved'); s.textContent = '· gemt ✓';
+    clearTimeout(savedT); savedT = setTimeout(() => (s.textContent = ''), 1500);
+  });
+});
+progress();
+
+function asText() {
+  let i = 0, out = 'Svar til Conny the Cleaner\n';
+  for (const [title, qs] of SECTIONS) {
+    out += `\n## ${title}\n`;
+    for (const [q] of qs) { i++; out += `${i}. ${q}\n   ${(answers[i] || '').trim() || '(ikke besvaret)'}\n`; }
+  }
+  return out;
+}
+function toast(m) { const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
+
+document.getElementById('copyBtn').addEventListener('click', async () => {
+  const text = asText();
+  try { await navigator.clipboard.writeText(text); toast('Kopieret! Sæt det ind i chatten 🙌'); }
+  catch {
+    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast('Kopieret! Sæt det ind i chatten 🙌'); } catch { toast('Kunne ikke kopiere. Prøv "Gem fil".'); }
+    ta.remove();
+  }
+});
+document.getElementById('dlBtn').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([asText()], { type: 'text/plain;charset=utf-8' }));
+  a.download = 'conny-svar.txt'; a.click();
+});
+</script>
+</body>
+</html>

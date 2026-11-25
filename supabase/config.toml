@@ -1,0 +1,10 @@
+# Indstillinger til Supabase-værktøjet (bruges når funktionerne lægges online)
+project_id = "conny"
+
+# Begge funktioner kaldes uden login: opret-familie før nogen er logget ind,
+# og paamindelser af databasens tidsplan. Begge kontrollerer selv deres input.
+[functions.opret-familie]
+verify_jwt = false
+
+[functions.paamindelser]
+verify_jwt = false

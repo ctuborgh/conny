@@ -1,0 +1,10 @@
+# Hemmeligheder må aldrig på GitHub
+hemmeligt/
+.env
+*.env
+
+# Mac og værktøjer
+.DS_Store
+node_modules/
+.claude/
+supabase/.temp/
