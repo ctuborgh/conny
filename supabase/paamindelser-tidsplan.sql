@@ -1,7 +1,7 @@
 -- =====================================================================
 -- Conny: tidsplan for påmindelser
 -- Kør denne fil i SQL Editor EFTER at funktionen "paamindelser" er lagt online.
--- Erstat PROJEKT-REF og ANON-NØGLE nedenfor (Claude kan udfylde dem for dig).
+-- Projektets adresse og den offentlige anon-nøgle er udfyldt nedenfor.
 -- Begge dele er offentlige oplysninger og ikke hemmelige.
 -- =====================================================================
 
@@ -15,8 +15,8 @@ select cron.schedule(
   '0 * * * *',
   $$
   select net.http_post(
-    url     := 'https://PROJEKT-REF.supabase.co/functions/v1/paamindelser',
-    headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ANON-NØGLE'),
+    url     := 'https://zekkrswklmyskzmmzmpn.supabase.co/functions/v1/paamindelser',
+    headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpla2tyc3drbG15c2t6bW16bXBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTU1ODU4MTEsImV4cCI6MjExMTE2MTgxMX0.OqIlfG1Yn4iUVd2W1UKtpOnPhL8zuYSb2LshfSs0g58'),
     body    := '{}'::jsonb
   );
   $$
